@@ -8,7 +8,10 @@ module.exports = (sequelize, Sequelize) => {
     },
     description	: {
       type: Sequelize.TEXT
-    }         
+    },
+    duration	: {
+      type: Sequelize.STRING
+    },         
   },
   {
     timestamps: true,

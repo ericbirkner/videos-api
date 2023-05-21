@@ -5,7 +5,7 @@ const db = require("../models");
 const Video = db.videos;
 const Op = db.Sequelize.Op;
 const axios = require('axios')
-
+const YTDurationToSeconds = require('../helpers/yt-duration-to-seconds');
 
 exports.getYoutubeId = async (req, res) => {
   if(!req.params.vid) {
@@ -19,7 +19,7 @@ exports.getYoutubeId = async (req, res) => {
 
   try {
     const vid = req.params.vid;
-    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet`);
+    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
     console.log(resp.data);
     res.send(resp.data.items[0]);
   } catch (err) {
@@ -50,17 +50,20 @@ exports.create = async (req, res) => {
   let vid = req.body.vid;
   
   try {
-    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet`);
-    console.log(resp.data.items[0]);
+    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
+    //console.log(resp.data.items[0]);
+    console.log(resp.data);
     const datos = {
       vid : vid,
       title : resp.data.items[0].snippet.title,
       description : resp.data.items[0].snippet.description,
+      duration: YTDurationToSeconds(resp.data.items[0].contentDetails.duration)
     };
 
   //console.log("Data to save: ", datos);
 
   // Save Video in the database
+  
   Video.create(datos)
     .then(async data => {
       data.code=200;
@@ -75,6 +78,7 @@ exports.create = async (req, res) => {
           err.message || "Some error occurred while creating the Video."
       });
     });
+    
   } catch (err) {
     // Handle Error Here
     console.error(err);
@@ -84,6 +88,7 @@ exports.create = async (req, res) => {
       message: 'Error requesting youtube id.'
     });
   }
+  
 };
 
 

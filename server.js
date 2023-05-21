@@ -24,7 +24,7 @@ const db = require("./app/models");
 
 
 app.get("/", (req, res) => {
-  res.json({ message: "Api No molestar" });
+  res.json({ message: "Api videos" });
 });
 
 require("./app/routes/routes")(app);
