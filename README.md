@@ -4,8 +4,8 @@ This README would normally document whatever steps are necessary to get your app
 
 # Api rest
 
-## Compilar docker
-- docker build . -t api-no-molestar
+## install packages
+- npm install
 
-## Ejecutar docker
-- docker run -e VERSION=1.1 -p 80:80 api-no-molestar
+## run
+- npm run start
