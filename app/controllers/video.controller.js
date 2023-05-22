@@ -19,7 +19,7 @@ exports.getYoutubeId = async (req, res) => {
 
   try {
     const vid = req.params.vid;
-    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
+    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=${process.env.API_KEY}&part=snippet%2Cstatistics%2CcontentDetails`);
     console.log(resp.data);
     res.send(resp.data.items[0]);
   } catch (err) {
