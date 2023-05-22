@@ -9,8 +9,9 @@ module.exports = app => {
   router.get("/videos", videos.findAll);
   router.get("/videos/youtube/:vid", videos.getYoutubeId);
 
-  //no descomentar
-  //router.get("/videos/:id", videos.findOne);
+  router.get("/videos/:vid", videos.findVid);
+
+  router.delete("/videos/:id", videos.delete);
   router.post("/videos", videos.create);
   
   app.use('/api', router);

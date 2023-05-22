@@ -53,31 +53,35 @@ exports.create = async (req, res) => {
     const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
     //console.log(resp.data.items[0]);
     console.log(resp.data);
-    const datos = {
-      vid : vid,
-      title : resp.data.items[0].snippet.title,
-      description : resp.data.items[0].snippet.description,
-      duration: YTDurationToSeconds(resp.data.items[0].contentDetails.duration)
-    };
-
-  //console.log("Data to save: ", datos);
-
-  // Save Video in the database
-  
-  Video.create(datos)
-    .then(async data => {
-      data.code=200;
-      data.status='OK';
-      data.message ='OK'
-      res.send(data);
-    })
-    .catch(async err => {
-      console.error("datos no guardados",datos);
+    if(resp.data.items[0].hasOwnProperty('id')){
+      const datos = {
+        vid : vid,
+        title : resp.data.items[0].snippet.title,
+        description : resp.data.items[0].snippet.description,
+        duration: YTDurationToSeconds(resp.data.items[0].contentDetails.duration),
+        image : `https://i.ytimg.com/vi/${vid}/sddefault.jpg`
+      };
+      Video.create(datos)
+      .then(async data => {
+        data.code=200;
+        data.status='OK';
+        data.message ='OK'
+        res.send(data);
+      })
+      .catch(async err => {
+        console.error("datos no guardados",datos);
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the Video."
+        });
+      });  
+    }else{
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Video."
+        status: "error",
+        code: 500,
+        message: 'Error requesting youtube id.'
       });
-    });
+    }
     
   } catch (err) {
     // Handle Error Here
@@ -95,7 +99,7 @@ exports.create = async (req, res) => {
 // Retrieve all videos from the database.
 exports.findAll = (req, res) => {
   
-  Video.findAll({ where: true })
+  Video.findAll({ where: true, order: [['id', 'DESC']] })
     .then(data => {
       res.send(data);
     })
@@ -153,6 +157,29 @@ exports.delete = (req, res) => {
     .catch(err => {
       res.status(500).send({
         message: "Could not delete Video with id=" + id
+      });
+    });
+};
+
+// Find a single Perfil with an id
+exports.findVid = (req, res) => {
+  const vid = req.params.vid;
+
+  Video.findOne({
+    where: { vid: vid},
+    })
+    .then(data => {
+      if (data) {
+        res.send(data);
+      } else {
+        res.status(200).send({
+          message: `Cannot find video with vid=${vid}.`
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: "Error retrieving video with vid=" + vid
       });
     });
 };

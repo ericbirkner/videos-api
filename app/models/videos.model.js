@@ -11,7 +11,10 @@ module.exports = (sequelize, Sequelize) => {
     },
     duration	: {
       type: Sequelize.STRING
-    },         
+    },
+    image : {
+      type: Sequelize.STRING
+    }    
   },
   {
     timestamps: true,
