@@ -48,40 +48,83 @@ exports.create = async (req, res) => {
   }
   
   let vid = req.body.vid;
+  let source = req.body.source;
   
   try {
-    const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
+
+    if(source=='youtube'){
+      const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=AIzaSyAwuNRV-TO7-6B-gZKUUECVoO1JFq85l9c&part=snippet%2Cstatistics%2CcontentDetails`);
     //console.log(resp.data.items[0]);
     console.log(resp.data);
-    if(resp.data.items[0].hasOwnProperty('id')){
-      const datos = {
-        vid : vid,
-        title : resp.data.items[0].snippet.title,
-        description : resp.data.items[0].snippet.description,
-        duration: YTDurationToSeconds(resp.data.items[0].contentDetails.duration),
-        image : `https://i.ytimg.com/vi/${vid}/sddefault.jpg`
-      };
-      Video.create(datos)
-      .then(async data => {
-        data.code=200;
-        data.status='OK';
-        data.message ='OK'
-        res.send(data);
-      })
-      .catch(async err => {
-        console.error("datos no guardados",datos);
+      if(resp.data.items[0].hasOwnProperty('id')){
+        const datos = {
+          vid : vid,
+          title : resp.data.items[0].snippet.title,
+          description : resp.data.items[0].snippet.description,
+          duration: YTDurationToSeconds(resp.data.items[0].contentDetails.duration),
+          image : `https://i.ytimg.com/vi/${vid}/sddefault.jpg`,
+          source: 'youtube'
+        };
+        Video.create(datos)
+        .then(async data => {
+          data.code=200;
+          data.status='OK';
+          data.message ='OK'
+          res.send(data);
+        })
+        .catch(async err => {
+          console.error("datos no guardados",datos);
+          res.status(500).send({
+            message:
+              err.message || "Some error occurred while creating the Video."
+          });
+        });  
+      }else{
         res.status(500).send({
-          message:
-            err.message || "Some error occurred while creating the Video."
+          status: "error",
+          code: 500,
+          message: 'Error requesting youtube id.'
         });
-      });  
+      }
     }else{
-      res.status(500).send({
-        status: "error",
-        code: 500,
-        message: 'Error requesting youtube id.'
+      const vimeoToken = "aa38250f345f2a1f7b345bac2f71c34f";
+      axios
+      .get(`https://api.vimeo.com/videos/${vid}`, {
+        headers: {
+          Authorization: `bearer ${vimeoToken}`,
+          'content-type': 'application/json',
+        },
+      })
+      .then(json => {
+        console.log(json.data);
+        const datos = {
+          vid : vid,
+          title : json.data.name,
+          description : json.data.description,
+          duration: json.data.duration,
+          image : json.data.pictures.base_link,
+          source: 'vimeo'
+        };
+        console.log('datos:',datos);
+
+        //res.send(json);
+        Video.create(datos)
+        .then(async data => {
+          data.code=200;
+          data.status='OK';
+          data.message ='OK'
+          res.send(data);
+        })
+        .catch(async err => {
+          console.error("datos no guardados",datos);
+          res.status(500).send({
+            message:
+              err.message || "Some error occurred while creating the Video."
+          });
+        });  
+        
       });
-    }
+    }   
     
   } catch (err) {
     // Handle Error Here
